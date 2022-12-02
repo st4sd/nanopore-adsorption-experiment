@@ -1,0 +1,17 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nanopore-database-pvc
+  namespace: ${NAMESPACE}       # Openshift/Kubernetes cluster namespace
+  labels:                       # IBM Cloud location: https://cloud.ibm.com/docs/containers?topic=containers-regions-and-zones
+    zone: ${IBM_CLOUD_ZONE}
+    region: ${IBM_CLOUD_REGION}
+    billingType: hourly
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: ibmc-file-bronze

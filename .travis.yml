@@ -1,0 +1,66 @@
+sudo: required
+
+dist: bionic
+
+language: python
+
+python:
+  - "3.9"
+
+services: docker
+
+git:
+  depth: 5
+
+branches:
+  only:
+  - main
+
+addons:
+  apt:
+    update: true
+    packages:
+      - gettext
+
+install:
+  # Install Python linters
+  - pip install --quiet --upgrade pip
+  - pip install --quiet flake8
+
+before_script:
+  - export IMAGENAME="$QUAY_URL"/"$APPLICATION_NAME"-"$APPLICATION_MAINTAINER"
+  - export IMAGETAG="$(date '+%Y.%m.%d')-$(git rev-parse --short HEAD)"
+
+script:
+  # Run Python linter
+  - flake8 --max-line-length=100 bin/
+
+  # Connect to quay.io
+  - docker login -u "$QUAY_USERNAME" -p "$QUAY_API_KEY" quay.io
+  - docker image build --file "$APPLICATION_NAME".Dockerfile
+                       --tag "$IMAGENAME":"$IMAGETAG"
+                       --build-arg VERSION
+                       .
+  - docker image push "$IMAGENAME":"$IMAGETAG"
+
+  - if [ "$TRAVIS_BRANCH" == "main" ]; then
+      docker image tag "$IMAGENAME":"$IMAGETAG" "$IMAGENAME":latest;
+      docker image push "$IMAGENAME":latest;
+    fi;
+
+after_script:
+  - pip list
+
+env:
+  matrix:
+    # Push image to quay.io using QUAY_API_KEY defined via web UI
+    - APPLICATION_NAME=raspa-pypi   VERSION=2.0.4
+    - APPLICATION_NAME=raspa-source VERSION=2.0.47
+    # Push image to quay.io using QUAY_API_KEY defined via web UI
+    - APPLICATION_NAME=raspa-pypi   VERSION=2.0.4
+    - APPLICATION_NAME=raspa-source VERSION=2.0.47
+  global:
+    - QUAY_USERNAME=st4sd+mdlab
+    - QUAY_URL=quay.io/st4sd/community-applications
+    - APPLICATION_MAINTAINER=mdlab
+    # QUAY_API_KEY defined via web UI

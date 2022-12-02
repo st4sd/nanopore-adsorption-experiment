@@ -1,0 +1,26 @@
+---
+kind: Workflow
+apiVersion: hpsys.ie.ibm.com/v1alpha1
+metadata:
+  name: nanopore-adsorption-experiment
+spec:
+  package:
+    url: https://github.com/st4sd/nanopore-adsorption-experiment.git
+    branch: main
+  additionalOptions:
+    - "-l15"
+    - "--useMemoization=true"
+    - "--registerWorkflow=true"
+    - "--discovererMonitorDir=/tmp/workdir/pod-reporter/update-files"
+  resources:
+    elaunchPrimary:
+      cpu: 1.0
+      memory: 2Gi
+  volumes:
+  - name: nanopore-database-pv
+    persistentVolumeClaim:
+      claimName: nanopore-database-pvc
+  volumeMounts:
+  - name: nanopore-database-pv
+    mountPath: /input-volumes/nanopore-database-pvc
+    readOnly: true

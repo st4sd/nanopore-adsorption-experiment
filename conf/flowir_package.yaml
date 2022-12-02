@@ -1,0 +1,245 @@
+interface:
+  description: 'Uses the RASPA software package to simulate adsorption isotherms on nanoporous materials.'
+  inputSpec:
+    namingScheme: 'MaterialSource/MaterialName'
+    inputExtractionMethod:
+      hookGetInputIds:
+        source:
+          path: 'input/cif_files.dat'
+  propertiesSpec:
+  - name: 'isotherm'
+    description: 'Simulated adsorption isotherm.'
+    propertyExtractionMethod:
+      hookGetProperties:
+        source:
+          keyOutput: 'isotherms'
+
+variables:
+  default:
+    global:
+      numberOfNanopores: 3
+      externalTemperature_K: 298
+      gasComposition: '{\"CO2\":1.0}'
+      externalPressure_Pa: '1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000,2000000,5000000'
+      raspa_memory: '2Gi'
+
+blueprint:
+  openshift:
+    global:
+      resourceManager:
+        config:
+          walltime: 14400.0
+          backend: kubernetes
+
+environments:
+  default:
+    raspa:
+      DEFAULTS: INGRESS
+      PATH: /raspa/bin:$PATH
+      INGRESS_SUBDOMAIN: ${INGRESS}
+
+application-dependencies:
+  default:
+    - nanopore-database
+
+components:
+
+  - stage: 0
+    name: GetNanoporeSource
+    command:
+      arguments: sed -n "$((%(replica)s+1)),+0p" input/cif_files.dat:ref | awk -F "/" '{print $1}'
+      interpreter: bash
+    references:
+      - input/cif_files.dat:ref
+    resourceManager:
+      config:
+        backend: local
+    workflowAttributes:
+      replicate: '%(numberOfNanopores)s'
+
+  - stage: 0
+    name: GetNanoporeName
+    command:
+      arguments: sed -n "$((%(replica)s+1)),+0p" input/cif_files.dat:ref | awk -F "/" '{print $2}'
+      interpreter: bash
+    references:
+      - input/cif_files.dat:ref
+    resourceManager:
+      config:
+        backend: local
+    workflowAttributes:
+      replicate: '%(numberOfNanopores)s'
+
+  - stage: 0
+    name: AsymmetricUnitCell
+    command:
+      environment: raspa
+      executable: create_supercell.sh
+      arguments: -f nanopore-database:ref -n stage0.GetNanoporeName:output -s stage0.GetNanoporeSource:output -u 1,1,1 -o .
+    references:
+      - nanopore-database:ref
+      - stage0.GetNanoporeName:output
+      - stage0.GetNanoporeSource:output
+    resourceManager:
+      kubernetes:
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
+        cpuUnitsPerCore: 0.25
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 0
+    name: ChargeEquilibration
+    command:
+      environment: raspa
+      executable: charge_equilibration.sh
+      arguments: -n stage0.GetNanoporeName:output_P1 -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.AsymmetricUnitCell/cif.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
+        cpuUnitsPerCore: 0.5
+    resourceRequest:
+      memory: 1Gi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 1
+    name: MakeGrid
+    command:
+      environment: raspa
+      executable: make_grid.sh
+      arguments: -c '%(gasComposition)s' -n stage0.GetNanoporeName:output_P1_EQeq -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.ChargeEquilibration/eqeq_cif.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
+        cpuUnitsPerCore: 1
+    resourceRequest:
+      memory: '%(raspa_memory)s'
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 2
+    name: MonteCarlo
+    command:
+      environment: raspa
+      executable: monte_carlo.sh
+      arguments: -g -n stage0.GetNanoporeName:output_P1_EQeq -p '%(externalPressure_Pa)s' -t '%(externalTemperature_K)s' -c '%(gasComposition)s' -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.ChargeEquilibration/eqeq_cif.tgz:copy
+      - stage1.MakeGrid/grids.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
+        cpuUnitsPerCore: 1
+    resourceRequest:
+      memory: '%(raspa_memory)s'
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 2
+    name: ParseOutput
+    command:
+      environment: raspa
+      executable: parse_output.sh
+      arguments: -p '%(externalPressure_Pa)s' -t '%(externalTemperature_K)s' -c '%(gasComposition)s' -n stage0.GetNanoporeName:output -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage2.MonteCarlo/output_data.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
+        cpuUnitsPerCore: 0.25
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 2
+    name: Equilibrate
+    command:
+      environment: raspa
+      executable: equilibrate.sh
+      arguments: -l -p '%(externalPressure_Pa)s' -t '%(externalTemperature_K)s' -c '%(gasComposition)s' -o .
+    references:
+      - stage2.ParseOutput/raspa_csv.tgz:copy
+    resourceManager:
+      kubernetes:
+        cpuUnitsPerCore: 0.5
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 1Gi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 2
+    name: WriteAdsorptionToDatabase
+    command:
+      environment: raspa
+      executable: write_adsorption_to_database.sh
+      arguments: -p '%(externalPressure_Pa)s' -t '%(externalTemperature_K)s' -c '%(gasComposition)s' -s stage0.GetNanoporeSource:output -n stage0.GetNanoporeName:output -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.GetNanoporeSource:output
+      - stage2.Equilibrate/timeseries_csv.tgz:copy
+    resourceManager:
+      kubernetes:
+        cpuUnitsPerCore: 0.25
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 3
+    name: AggregateIsotherms
+    command:
+      environment: raspa
+      executable: aggregate_isotherm_output.py
+      arguments: --FrameworkName stage0.GetNanoporeName:output --OutputFolders stage2.WriteAdsorptionToDatabase:ref
+    references:
+      - stage0.GetNanoporeName:output
+      - stage2.WriteAdsorptionToDatabase:ref
+    resourceManager:
+      kubernetes:
+        cpuUnitsPerCore: 0.25
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      aggregate: true
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+output:
+  isotherms:
+    data-in: "AggregateIsotherms/isotherms.tgz:copy"
+    stages:
+      - 3
+
+platforms:
+  - openshift
+
+version: 1.0.0

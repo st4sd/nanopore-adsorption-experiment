@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[requires]
+python_version = "3.9"
+
+[dev-packages]
+raspa2 = "*"
+
+[packages]
+gemmi = "*"
+numpy = "*"
+pandas = "*"
+pyeqeq = "*"
+pymser = "*"
+requests = "*"
+scipy = "*"
