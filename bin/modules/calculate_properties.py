@@ -1,4 +1,5 @@
 # © Copyright IBM Corp. 2020 All Rights Reserved
+# SPDX-License-Identifier: Apache2.0
 
 import gemmi
 import numpy as np
