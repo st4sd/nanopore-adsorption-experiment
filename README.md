@@ -12,7 +12,7 @@ Automated virtual experiment that simulates adsorption isotherms on nanoporous m
 
 ## Launching the virtual experiment
 
-First you need to import the virtual experiment in your ST4SD registry [from the global ST4SD registry](https://st4sd.github.io/overview/using-the-virtual-experiments-registry-ui). You will then be able to start the parameterised package `nanopore-adsorption-experiment` in your private ST4SD registry (see [example notebook](nanopore-adsorption-experiment.ipynb)).
+First you need to import the virtual experiment in your ST4SD registry [from the global ST4SD registry](https://st4sd.github.io/overview/using-the-virtual-experiments-registry-ui). You will then be able to start the parameterised package `nanopore-adsorption-experiment` in your private ST4SD registry (see [example notebook](nanopore-adsorption-experiment.ipynb) or [instructions to run experiment using docker](run-using-docker.md)).
 
 ## Using custom database of CIF files
 
