@@ -32,20 +32,20 @@ python3 -m pip install "st4sd-runtime-core[deploy]"
 # Run Experiment
 cat <<EOF >cif_files.dat
 CoRE2019/GUJVOX_clean
-CoRE2019/VAZLUF_clean
-CoRE2019/WEMFEB_clean
 EOF
+
+numberOfNanopores=$(cat cif_files.dat | wc -l)
 
 cat <<EOF >variables.yaml
 global:
-  numberOfNanopores: 3
+  numberOfNanopores: ${numberOfNanopores}
   raspa_memory: 2Gi
   externalTemperature_K: 298
   externalPressure_Pa: 1000,2000,5001,10000,20000,50000,100000
   gasComposition: '{"CO2":1.0}'
 EOF
 
-elaunch.py --platform docker -i cif_files.dat -a variables.yaml \
+time elaunch.py --platform docker -i cif_files.dat -a variables.yaml \
     --manifest manifest.yaml conf/flowir_package.yaml
 
 # See outputs of experiment
