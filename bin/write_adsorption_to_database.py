@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python -B
 
-# © Copyright IBM Corp. 2021 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2021 All Rights Reserved
 
 import argparse
 import io
@@ -9,8 +9,11 @@ import json
 import os
 
 import pandas as pd
+
 from modules.copy_files import save_to_disk
 from modules.database_api_calls import get_objectID, post_tDependentProp
+
+from modules.InChIKey import InChIKey
 
 if (os.environ.get("INGRESS_SUBDOMAIN") is None or os.environ.get("INGRESS_SUBDOMAIN") == ""
         or os.environ.get("INGRESS_SUBDOMAIN") == "${INGRESS}"):
@@ -41,9 +44,13 @@ parser.add_argument('--FrameworkSource',
                              'hMOF',
                              'BWDB',
                              'BW20K',
+                             'ABC-6',
                              'ARABG',
+                             'ARC-MOF',
+                             'DEEM2011',
                              'CoRE2019',
                              'CoRE_DDEC',
+                             'generated',
                              'CURATED-COF',
                              'baburin_2008',
                              'simperler_2005',
@@ -89,16 +96,11 @@ name = 'isotherm'
 provenance = os.getenv('INSTANCE_DIR').split('/')[-1]
 print(f'Provenance: {provenance}')
 
-# Lookup table for InCHIKey
-InChiKey = {'CO2': 'CURLTUGMZLYLDI-UHFFFAOYSA-N',
-            'N2':  'IJGRMHOSHXDMSA-UHFFFAOYSA-N',
-            'H2O': 'XLYOFNOQVPJJNP-UHFFFAOYSA-N'}
-
 # Populate composition array
 print(f'FlueGasComposition: {arg.FlueGasComposition}')
 composition = [{'fraction': fraction,
-                'InChIKey': InChiKey[name]} for name, fraction in arg.FlueGasComposition.items()]
-print(f'InChiKey Composition: {composition}')
+                'InChIKey': InChIKey[name]} for name, fraction in arg.FlueGasComposition.items()]
+print(f'InChIKey Composition: {composition}')
 
 # Read CSV files as Pandas DataFrame
 data = []
@@ -118,7 +120,7 @@ for pressure in externalPressures:
                 uncertainty = csv[column_name]['mean-error']
                 adsorption = {'value': value,
                               'uncertainty': uncertainty,
-                              'InChIKey': InChiKey[column_name.split('_')[0]]}
+                              'InChIKey': InChIKey[column_name.split('_')[0]]}
                 adsorptions.append(adsorption)
 
         # Convert pressure values to bar units
@@ -138,10 +140,10 @@ if ingress_subdomain:
 
     print(f'response: {response.json()}')
 
-save_to_disk('isotherm.json',
+save_to_disk(name,
+             'isotherm.json',
              arg.output_folder,
-             name,
              provenance,
              arg.ExternalTemperature,
-             composition,
-             data)
+             data,
+             composition)

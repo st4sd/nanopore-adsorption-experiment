@@ -1,5 +1,5 @@
-# © Copyright IBM Corp. 2020 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2020 All Rights Reserved
 
 import glob
 import json
@@ -7,7 +7,7 @@ import os
 import shutil
 
 
-def copy_def_files(output_folder, forcefield_folder):
+def copy_def_files(output_folder: str, forcefield_folder: str) -> None:
     """
     Copy all '*.def' files of the appropriate force field to the output folder.
     """
@@ -23,7 +23,10 @@ def copy_def_files(output_folder, forcefield_folder):
         exit(1)
 
 
-def copy_cif_file(framework_folder, framework_source, framework_name, output_folder):
+def copy_cif_file(output_folder: str,
+                  framework_name: str,
+                  framework_source: str,
+                  framework_folder: str) -> None:
     """
     Copy the 'framework_name.cif' file from the 'framework_source' folder to the output folder.
     """
@@ -35,7 +38,16 @@ def copy_cif_file(framework_folder, framework_source, framework_name, output_fol
         print(f'Assuming the CIF file is already inside {output_folder}')
 
 
-def save_to_disk(filename, directory, name, provenance, temperature, composition, data):
+def save_to_disk(name: str,
+                 filename: str,
+                 directory: str,
+                 provenance: str,
+                 temperature: float,
+                 data: list[dict],
+                 composition: list[dict]) -> None:
+    """
+    Save a JSON file to disk with the same content as the database records.
+    """
     thermoProp = {'name': str(name),
                   'provenance': str(provenance),
                   'temperature': float(temperature),

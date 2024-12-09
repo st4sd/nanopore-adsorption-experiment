@@ -9,8 +9,8 @@ import shutil
 import tarfile
 
 # Required parameters
-parser = argparse.ArgumentParser(description='Aggregating isotherm output to compressed file' +
-                                             'from a given CIF.')
+parser = argparse.ArgumentParser(description='Aggregating Diffusion Coefficients output to' +
+                                             ' compressed file from a given CIF.')
 parser.add_argument('--FrameworkName',
                     type=str,
                     required=True,
@@ -27,15 +27,16 @@ parser.add_argument('--OutputFolders',
                     help='Directory for storing JSON output files.')
 arg = parser.parse_args()
 
-print(f'Aggregating isotherm output json files from {arg.FrameworkName}, {arg.OutputFolders}.')
+print(f'Aggregating Diffusion Coefficients json files from {0}, {1}'.format(arg.FrameworkName,
+                                                                            arg.OutputFolders))
 
-# Copy isothermProperties.json from all given Output Folders to AggregateIsotherms folder
+# Copy diffusion.json from all given Output Folders to AggregateDiffusionCoefficients folder
 for i in range(len(arg.OutputFolders)):
-    src = os.path.join(arg.OutputFolders[i], 'isotherm.json')
-    shutil.copyfile(src, f'{arg.FrameworkName[i]}-isotherm.json')
+    src = os.path.join(arg.OutputFolders[i], 'diffusion.json')
+    shutil.copyfile(src, f'{arg.FrameworkName[i]}-diffusion.json')
 
 # Compress to create isotherms.tgz
-with tarfile.open('isotherms.tgz', 'w') as tar:
+with tarfile.open('diffusion.tgz', 'w') as tar:
     for file in os.listdir():
         if file.endswith('.json'):
             tar.add(file)

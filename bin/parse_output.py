@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python -B
 
-# © Copyright IBM Corp. 2021 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2021 All Rights Reserved
 
 import argparse
 import glob
@@ -64,9 +64,10 @@ parser.add_argument('--ExternalPressure',
 arg = parser.parse_args()
 
 # Read file into string
-input_file_name = glob.glob('output_{0}_*_{1:.6f}_{2:g}.data'.format(arg.FrameworkName,
-                                                                     arg.ExternalTemperature,
-                                                                     arg.ExternalPressure))[0]
+input_file_name = glob.glob('{0}/output_{1}_*_{2:.6f}_{3:g}.data'.format(arg.output_folder,
+                                                                         arg.FrameworkName,
+                                                                         arg.ExternalTemperature,
+                                                                         arg.ExternalPressure))[0]
 with open(os.path.join(arg.output_folder, input_file_name), 'r') as f:
     raspa_string = f.read()
 

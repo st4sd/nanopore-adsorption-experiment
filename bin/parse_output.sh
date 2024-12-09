@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# © Copyright IBM Corp. 2021 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2021 All Rights Reserved
 
 # Parse input parameters
 while getopts o:n:p:c:t: flag

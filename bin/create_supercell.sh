@@ -1,13 +1,12 @@
 #!/bin/bash
 
-# © Copyright IBM Corp. 2020 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2020 All Rights Reserved
 
 # Parse input parameters
-while getopts u:o:n:s:f: flag
+while getopts o:n:s:f: flag
 do
     case "${flag}" in
-        u) UnitCells=${OPTARG};;
         o) OutputFolder=${OPTARG};;
         n) FrameworkName=${OPTARG};;
         s) FrameworkSource=${OPTARG};;
@@ -15,18 +14,13 @@ do
     esac
 done
 
-echo -e "\nCreating RASPA input file with a ${UnitCells} supercell..."
-if [[ -n "${UnitCells}" ]]; then
-	create_supercell.py --FrameworkFolder ${FrameworkFolder} --FrameworkSource ${FrameworkSource} --FrameworkName ${FrameworkName} --UnitCells ${UnitCells} ${OutputFolder}
-else
-	create_supercell.py --FrameworkFolder ${FrameworkFolder} --FrameworkSource ${FrameworkSource} --FrameworkName ${FrameworkName} ${OutputFolder}
-fi
-
-echo -e "\nRunning 0-step MonteCarlo simulation..."
-cd ${OutputFolder} && simulate -i simulation-CreateSupercell.input
+echo -e "\nCreating a primitive cell from the original CIF file..."
+cp -v ${FrameworkFolder}/${FrameworkSource}/${FrameworkName}.cif ${OutputFolder}/${FrameworkName}.cif
+pmg structure --convert --filename ${FrameworkName}.cif ${FrameworkName}_prim.cif
 
 echo -e "\nCopying P1-symmetry CIF file..."
-cp -v Movies/System_0/Framework_0_final_*_P1.cif ${FrameworkName}_P1.cif
+mv -v ${FrameworkName}_prim.cif ${OutputFolder}/${FrameworkName}_P1.cif
+cd ${OutputFolder}
 
 echo -e "\nCompressing CIF files..."
 tar -cvzf cif.tgz *.cif
