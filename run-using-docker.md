@@ -6,7 +6,6 @@
 2. The [docker](https://docs.docker.com/get-docker/) container runtime
 3. The [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) command-line utility
 
-
 ## Instructions
 
 You can try out the experiment on your laptop by:
@@ -46,7 +45,7 @@ global:
 EOF
 
 time elaunch.py --platform docker -i cif_files.dat -a variables.yaml \
-    --manifest manifest.yaml conf/flowir_package.yaml
+    --manifest manifest.yaml conf/flowir_adsorption.yaml
 
 # See outputs of experiment
 output_dir=$(ls -td flowir_package*.instance | head -1)
