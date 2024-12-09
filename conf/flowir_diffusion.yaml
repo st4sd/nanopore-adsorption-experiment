@@ -1,0 +1,252 @@
+interface:
+  description: 'Uses the RASPA software package to simulate diffuson of gases on nanoporous materials.'
+  inputSpec:
+    namingScheme: 'MaterialSource/MaterialName'
+    inputExtractionMethod:
+      hookGetInputIds:
+        source:
+          path: 'input/cif_files.dat'
+  propertiesSpec:
+  - name: 'diffusion'
+    description: 'Simulated diffusion coefficients.'
+    propertyExtractionMethod:
+      hookGetProperties:
+        source:
+          keyOutput: 'diffusion'
+
+variables:
+  default:
+    global:
+      numberOfNanopores: 3
+      externalTemperature_K: 298
+      gasComposition: '{\"CO2\":1.0}'
+      raspa_memory: '2Gi'
+      use_grid: 1
+      atomic_charges_method: 'eqeq'
+
+blueprint:
+  openshift:
+    global:
+      resourceManager:
+        config:
+          walltime: 14400.0
+          backend: kubernetes
+  docker:
+    global:
+      resourceManager:
+        config:
+          backend: docker
+
+environments:
+  default:
+    raspa:
+      DEFAULTS: INGRESS
+      PATH: /raspa/bin:$PATH
+      INGRESS_SUBDOMAIN: ${INGRESS}
+
+application-dependencies:
+  default:
+    - nanopore-database
+
+components:
+
+  - stage: 0
+    name: GetNanoporeSource
+    command:
+      arguments: sed -n "$((%(replica)s+1)),+0p" input/cif_files.dat:ref | awk -F "/" '{print $1}'
+      interpreter: bash
+    references:
+      - input/cif_files.dat:ref
+    resourceManager:
+      config:
+        backend: local
+    workflowAttributes:
+      replicate: '%(numberOfNanopores)s'
+
+  - stage: 0
+    name: GetNanoporeName
+    command:
+      arguments: sed -n "$((%(replica)s+1)),+0p" input/cif_files.dat:ref | awk -F "/" '{print $2}'
+      interpreter: bash
+    references:
+      - input/cif_files.dat:ref
+    resourceManager:
+      config:
+        backend: local
+    workflowAttributes:
+      replicate: '%(numberOfNanopores)s'
+
+  - stage: 0
+    name: PrimitiveUnitCell
+    command:
+      environment: raspa
+      executable: create_supercell.sh
+      arguments: -f nanopore-database:ref -n stage0.GetNanoporeName:output -s stage0.GetNanoporeSource:output -o .
+    references:
+      - nanopore-database:ref
+      - stage0.GetNanoporeName:output
+      - stage0.GetNanoporeSource:output
+    resourceManager:
+      kubernetes:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        cpuUnitsPerCore: 0.25
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 0
+    name: ChargeAssignment
+    command:
+      environment: raspa
+      executable: charge_equilibration.sh
+      arguments: -n stage0.GetNanoporeName:output_P1 -m '%(atomic_charges_method)s' -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.PrimitiveUnitCell/cif.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        cpuUnitsPerCore: 0.5
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 1Gi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 1
+    name: MakeGrid
+    command:
+      environment: raspa
+      executable: make_grid.sh
+      arguments: -u '%(use_grid)s' -c '%(gasComposition)s' -n stage0.GetNanoporeName:output_P1_charged -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.ChargeAssignment/charged_cif.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        cpuUnitsPerCore: 1
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+    resourceRequest:
+      memory: '%(raspa_memory)s'
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 2
+    name: MolecularDynamics
+    command:
+      environment: raspa
+      executable: molecular_dynamics.sh
+      arguments: -u '%(use_grid)s' -n stage0.GetNanoporeName:output_P1_charged  -c '%(gasComposition)s' -t '%(externalTemperature_K)s' -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.ChargeAssignment/charged_cif.tgz:copy
+      - stage1.MakeGrid/grids.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        cpuUnitsPerCore: 1
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+    resourceRequest:
+      memory: '%(raspa_memory)s'
+    workflowAttributes:
+      shutdownOn:
+        - Killed
+        - KnownIssue
+      restartHookOn:
+        - KnownIssue
+      maxRestarts: 10
+      restartHookFile: restart_molecular_dynamics.py
+
+  - stage: 2
+    name: ParseMSD
+    command:
+      environment: raspa
+      executable: parse_msd.sh
+      arguments: -t '%(externalTemperature_K)s' -c '%(gasComposition)s' -n stage0.GetNanoporeName:output_P1_charged -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.ChargeAssignment/charged_cif.tgz:copy
+      - stage2.MolecularDynamics/molecular_dynamics.tgz:copy
+      - stage2.MolecularDynamics/mean_squared_displacement.tgz:copy
+    resourceManager:
+      kubernetes:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 2
+    name: WriteDiffusionToDatabase
+    command:
+      environment: raspa
+      executable: write_diffusion_to_database.sh
+      arguments: -s stage0.GetNanoporeSource:output -n stage0.GetNanoporeName:output -o .
+    references:
+      - stage0.GetNanoporeName:output
+      - stage0.GetNanoporeSource:output
+      - stage2.ParseMSD/diffusion.json:copy
+    resourceManager:
+      kubernetes:
+        cpuUnitsPerCore: 0.25
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+  - stage: 3
+    name: AggregateDiffusionCoefficients
+    command:
+      environment: raspa
+      executable: aggregate_diffusion_output.py
+      arguments: --FrameworkName stage0.GetNanoporeName:output --OutputFolders stage2.WriteDiffusionToDatabase:ref
+    references:
+      - stage0.GetNanoporeName:output
+      - stage2.WriteDiffusionToDatabase:ref
+    resourceManager:
+      kubernetes:
+        cpuUnitsPerCore: 0.25
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+      docker:
+        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+    resourceRequest:
+      memory: 512Mi
+    workflowAttributes:
+      aggregate: true
+      shutdownOn:
+      - Killed
+      - KnownIssue
+
+output:
+  diffusion:
+    data-in: "AggregateDiffusionCoefficients/diffusion.tgz:copy"
+    stages:
+      - 3
+
+platforms:
+  - openshift
+  - docker
+
+version: 1.0.0
