@@ -2,7 +2,7 @@
 
 ## Bundled CIF files
 
-It is possible to run the experiments by adding the required CIF files to this folder and using it as `nanopore-database` dependency in the `manifest.yaml`.
+It is possible to run the experiments by adding the required CIF files to this folder.
 
 Then, you can define the materials that are relevant to the experiment setting the content of `cif_files.dat` in the `Define a subset of materials to be screened` section of the [notebook](nanopore-adsorption-experiment.ipynb).
 
