@@ -1,18 +1,19 @@
 #!/usr/bin/env -S python -B
 
 # SPDX-License-Identifier: Apache2.0
-# © Copyright IBM Corp. 2020 All Rights Reserved
+# © Copyright IBM Corp. 2022 All Rights Reserved
 
 import argparse
 import json
 import os
 from textwrap import dedent
 
-from modules.calculate_properties import calculate_grid, calculate_UnitCells
+from modules.calculate_properties import (calculate_grid, calculate_NumberOfMolecules,
+                                          calculate_UnitCells)
 from modules.copy_files import copy_def_files
 
 # Required parameters
-parser = argparse.ArgumentParser(description='Run RASPA GCMC simulation.')
+parser = argparse.ArgumentParser(description='Run RASPA Molecular Dynamics simulation.')
 parser.add_argument('output_folder',
                     type=str,
                     action='store',
@@ -28,38 +29,52 @@ parser.add_argument('--FrameworkName',
 # Optional parameters
 parser.add_argument('--NumberOfInitializationCycles',
                     type=int,
-                    default=0,
+                    default=1000,
                     action='store',
                     required=False,
                     metavar='NUMBER_OF_INITIALIZATION_CYCLES',
-                    help='Number of Monte Carlo initialization cycles.')
+                    help='Number of Monte Carlo initialization steps.')
+parser.add_argument('--NumberOfEquilibrationCycles',
+                    type=int,
+                    default=1000,
+                    action='store',
+                    required=False,
+                    metavar='NUMBER_OF_EQUILIBRATION_CYCLES',
+                    help='Number of Molecular Dynamics equilibration steps.')
 parser.add_argument('--NumberOfCycles',
                     type=int,
-                    default=10000,
+                    default=5000000,
                     action='store',
                     required=False,
                     metavar='NUMBER_OF_CYCLES',
-                    help='Total number of Monte Carlo simulation cycles.')
+                    help='Number of Molecular Dynamics simulation steps.')
 parser.add_argument('--PrintEvery',
                     type=int,
-                    default=1,
+                    default=10000,
                     action='store',
                     required=False,
                     metavar='PRINT_EVERY',
                     help='Print the loadings and energies every \'PRINT_EVERY\' cycles.')
 parser.add_argument('--WriteBinaryRestartFileEvery',
                     type=int,
-                    default=1000,
+                    default=10000,
                     action='store',
                     required=False,
                     metavar='WRITE_BINARY_RESTART_FILE_EVERY',
                     help='Write restart file every \'WRITE_BINARY_RESTART_FILE_EVERY\' cycles.')
+parser.add_argument('--TimeStep',
+                    type=float,
+                    default=1e-2,
+                    action='store',
+                    required=False,
+                    metavar='TIME_STEP',
+                    help='Time step [ps] used in the Molecular Dynamics simulation.')
 parser.add_argument('--ForcefieldFolder',
                     type=str,
                     action='store',
                     required=False,
-                    metavar='FORCEFIELD_FOLDER',
                     default=os.getenv('FORCEFIELD_DIR'),
+                    metavar='FORCEFIELD_FOLDER',
                     help='Location of the force field *.def files.')
 parser.add_argument('--CutOffVDW',
                     type=float,
@@ -100,13 +115,6 @@ parser.add_argument('--IgnoreChargesFromCIFFile',
                     required=False,
                     action='store_true',
                     help='Whether to consider the partial atomic charges already in the CIF file.')
-parser.add_argument('--HeliumVoidFraction',
-                    type=float,
-                    default=0.0,
-                    action='store',
-                    required=False,
-                    metavar='HELIUM_VOID_FRACTION',
-                    help='The void fraction measured by probing the structure with He at 300 K.')
 parser.add_argument('--ExternalTemperature',
                     type=float,
                     default=300.0,
@@ -114,13 +122,6 @@ parser.add_argument('--ExternalTemperature',
                     required=False,
                     metavar='EXTERNAL_TEMPERATURE',
                     help='External temperature [Kelvin].')
-parser.add_argument('--ExternalPressure',
-                    type=str,
-                    action='store',
-                    required=False,
-                    default="101325",
-                    metavar='EXTERNAL_PRESSURE(S)',
-                    help='External pressure [Pascal]. Accepts a comma-separated list of values.')
 parser.add_argument('--FlueGasComposition',
                     action='store',
                     required=False,
@@ -155,10 +156,21 @@ parser.add_argument('--WriteMoviesEvery',
                     required=False,
                     metavar='WRITE_MOVIES_EVERY',
                     help='Write snapshots of the simulation every \'WRITE_MOVIES_EVERY\' cycles.')
+parser.add_argument('--NumberOfMolecules',
+                    type=int,
+                    default=None,
+                    action='store',
+                    required=False,
+                    metavar='TOTAL_NUMBER_OF_MOLECULES',
+                    help='Total number of molecules created inside the supercell.')
+parser.add_argument('--PrintMSDEvery',
+                    type=int,
+                    default=1000,
+                    action='store',
+                    required=False,
+                    metavar='PRINT_MSD_EVERY',
+                    help='Print the mean square displacement every \'PRINT_MSD_EVERY\' cycles.')
 arg = parser.parse_args()
-
-# Manipulate ExternalPressure string
-arg.ExternalPressure = arg.ExternalPressure.replace(',', ' ')
 
 # Copy files to output directory
 copy_def_files(arg.output_folder, arg.ForcefieldFolder)
@@ -175,6 +187,10 @@ largest_cutoff = max(arg.CutOffVDW,
 # Calculate number of unit cell repetitions in the supercell
 arg.UnitCells = calculate_UnitCells(cif_filename, largest_cutoff)
 
+# Automatically calculate the number of molecules in the supercell
+if arg.NumberOfMolecules is None:
+    arg.NumberOfMolecules = calculate_NumberOfMolecules(cif_filename, largest_cutoff, arg.UnitCells)
+
 # Calculate grid types and number of grids
 arg.GridTypes, arg.NumberOfGrids = calculate_grid(arg.FlueGasComposition)
 
@@ -186,15 +202,22 @@ arg.UseChargesFromCIFFile = 'no' if arg.IgnoreChargesFromCIFFile else 'yes'
 
 # Create file header as string
 inputfile = dedent("""\
-SimulationType                      MonteCarlo
+SimulationType                      MolecularDynamics
 NumberOfCycles                      {NumberOfCycles}                        # int
 NumberOfInitializationCycles        {NumberOfInitializationCycles}          # int
+NumberOfEquilibrationCycles         {NumberOfEquilibrationCycles}           # int
 PrintEvery                          {PrintEvery}                            # int
 
 ContinueAfterCrash                  yes                                     # yes / no
+WriteBinaryRestartFileEvery         {WriteBinaryRestartFileEvery}           # int
 Movies                              {Movies}                                # yes / no
 WriteMoviesEvery                    {WriteMoviesEvery}                      # int
-WriteBinaryRestartFileEvery         {WriteBinaryRestartFileEvery}           # int
+
+Ensemble                            NVT
+TimeStep                            {TimeStep}                              # float
+
+ComputeMSD                          yes                                     # yes / no
+PrintMSDEvery                       {PrintMSDEvery}                         # int
 
 ForceField                          Local                                   # string
 CutOffVDW                           {CutOffVDW}                             # float
@@ -206,17 +229,15 @@ EwaldPrecision                      {EwaldPrecision}                        # fl
 
 Framework                           0                                       # int
 FrameworkName                       {FrameworkName}                         # string
-HeliumVoidFraction                  {HeliumVoidFraction}                    # float
 ExternalTemperature                 {ExternalTemperature}                   # float
-ExternalPressure                    {ExternalPressure}                      # float
 UseChargesFromCIFFile               {UseChargesFromCIFFile}                 # yes / no
 UnitCells                           {UnitCells}                             # int int int
 
+UseTabularGrid                      {UseTabularGrid}                        # yes / no
 NumberOfGrids                       {NumberOfGrids}                         # int
 GridTypes                           {GridTypes}                             # string
 SpacingVDWGrid                      {SpacingVDWGrid}                        # float
 SpacingCoulombGrid                  {SpacingCoulombGrid}                    # float
-UseTabularGrid                      {UseTabularGrid}                        # yes / no
 
 """).format(**arg.__dict__)
 
@@ -235,14 +256,11 @@ for name, fraction in arg.FlueGasComposition.items():
         Component {index_of_component} MoleculeName                  {name}
                     MolFraction                   {fraction}
                     MoleculeDefinition            Local
-                    SwapProbability               0.5
-                    TranslationProbability        0.2
-                    RotationProbability           0.1
-                    ReinsertionProbability        0.1
-                    IdentityChangeProbability     0.1
-                        NumberOfIdentityChanges   {number_of_components - 1}
-                        IdentityChangesList       {' '.join(map(str, identity_change_list))}
-                    CreateNumberOfMolecules       0
+                    TranslationProbability        0.6
+                    RotationProbability           0.2
+                    ReinsertionProbability        0.2
+                    ExtraFrameworkMolecule        no
+                    CreateNumberOfMolecules       {int(arg.NumberOfMolecules * fraction)}
 
         """)
     else:
@@ -250,14 +268,13 @@ for name, fraction in arg.FlueGasComposition.items():
         Component {index_of_component} MoleculeName                  {name}
                     MolFraction                   {fraction}
                     MoleculeDefinition            Local
-                    SwapProbability               0.5
-                    TranslationProbability        0.3
-                    RotationProbability           0.1
-                    ReinsertionProbability        0.1
-                    CreateNumberOfMolecules       0
+                    TranslationProbability        0.6
+                    RotationProbability           0.2
+                    ReinsertionProbability        0.2
+                    ExtraFrameworkMolecule        no
+                    CreateNumberOfMolecules       {int(arg.NumberOfMolecules * fraction)}
 
         """)
-
 # Write string to file
-with open(os.path.join(arg.output_folder, 'simulation-MonteCarlo.input'), 'w') as f:
+with open(os.path.join(arg.output_folder, 'simulation-MolecularDynamics.input'), 'w') as f:
     f.write(inputfile)

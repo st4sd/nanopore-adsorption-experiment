@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python -B
 
-# © Copyright IBM Corp. 2020 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2020 All Rights Reserved
 
 import argparse
 import json
@@ -75,6 +75,10 @@ parser.add_argument('--EwaldPrecision',
                     required=False,
                     metavar='EWALD_PRECISION',
                     help='Ewald sum precision used to calculate the amount of wave vectors.')
+parser.add_argument('--IgnoreChargesFromCIFFile',
+                    required=False,
+                    action='store_true',
+                    help='Whether to consider the partial atomic charges already in the CIF file.')
 parser.add_argument('--SpacingVDWGrid',
                     type=float,
                     default=0.1,
@@ -109,6 +113,9 @@ largest_cutoff = max(arg.CutOffVDW,
 # Calculate number of unit cell repetitions in the supercell
 arg.UnitCells = calculate_UnitCells(cif_filename, largest_cutoff)
 
+# Determine whether existing partial atomic charges are considered or not
+arg.UseChargesFromCIFFile = 'no' if arg.IgnoreChargesFromCIFFile else 'yes'
+
 # Create input file as string
 inputfile = dedent("""\
 SimulationType                  MakeGrid
@@ -123,7 +130,7 @@ EwaldPrecision                  {EwaldPrecision}                # float
 
 Framework                       0                               # int
 FrameworkName                   {FrameworkName}                 # string
-UseChargesFromCIFFile           yes                             # yes / no
+UseChargesFromCIFFile           {UseChargesFromCIFFile}         # yes / no
 UnitCells                       {UnitCells}                     # int int int
 
 NumberOfGrids                   {NumberOfGrids}                 # int

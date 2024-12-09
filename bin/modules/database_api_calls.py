@@ -1,19 +1,19 @@
-# © Copyright IBM Corp. 2021 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2021 All Rights Reserved
 
 import os
 
 import requests
 
 
-def _url(path):
+def _url(path: str) -> str:
     """
     Returns the full endpoint URL by composing it with the base API URL.
     """
     return f'http://database-api.{os.environ["INGRESS_SUBDOMAIN"]}' + path
 
 
-def get_objectID(materialName, materialSource):
+def get_objectID(materialName: str, materialSource: str) -> str:
     """
     Retrieves the unique ObjectID of a material using a GET call.
     """
@@ -24,7 +24,12 @@ def get_objectID(materialName, materialSource):
     return objectID
 
 
-def post_tDependentProp(id, name, provenance, temperature, composition, data):
+def post_tDependentProp(id: str,
+                        name: str,
+                        provenance: str,
+                        temperature: float,
+                        composition: list[dict],
+                        data: list[dict]) -> requests.models.Response:
     """
     Inserts a t-dependent property for a given material ID using a POST call.
     """
@@ -37,7 +42,12 @@ def post_tDependentProp(id, name, provenance, temperature, composition, data):
     return requests.post(url, json=thermoProp)
 
 
-def post_pDependentProp(id, name, provenance, pressure, composition, data):
+def post_pDependentProp(id: str,
+                        name: str,
+                        provenance: str,
+                        pressure: float,
+                        composition: list[dict],
+                        data: list[dict]) -> requests.models.Response:
     """
     Inserts a p-dependent property for a given material ID using a POST call.
     """
@@ -50,7 +60,14 @@ def post_pDependentProp(id, name, provenance, pressure, composition, data):
     return requests.post(url, json=thermoProp)
 
 
-def post_constantProp(id, name, provenance, pressures, temperatures, data, RMSE, composition):
+def post_constantProp(id: str,
+                      name: str,
+                      RMSE: float,
+                      provenance: str,
+                      data: list[dict],
+                      pressures: float,
+                      temperatures: float,
+                      composition: list[dict]) -> requests.models.Response:
     """
     Inserts a constant property for a given material ID using a POST call.
     """
