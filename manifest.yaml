@@ -1,2 +1,0 @@
-nanopore-database: ../cif:copy
-hooks: ../hooks:copy
