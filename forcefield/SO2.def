@@ -1,19 +1,19 @@
 # critical constants: Temperature [T], Pressure [Pa], and Acentric factor [-]
-126.192
-3395800.0
-0.0372
+431.6
+7920000.0
+0.256
 # Number Of Atoms
 3
 # Number of groups
 1
-# N2-group
+# SO2-group
 rigid
 # number of atoms
 3
 # atomic positions
-0 N_n2    0.0           0.0           0.55
-1 N_com   0.0           0.0           0.0
-2 N_n2    0.0           0.0          -0.55
+0 O_so2     0.0           1.2488        0.7008
+1 S_so2     0.0           0.0           0.0
+2 O_so2     0.0           0.0          -1.432
 # Chiral centers Bond  BondDipoles Bend  UrayBradley InvBend  Torsion Imp. Torsion Bond/Bond Stretch/Bend Bend/Bend Stretch/Torsion Bend/Torsion IntraVDW IntraCoulomb
                0    2            0    0            0       0        0            0         0            0         0               0            0        0            0
 # Bond stretch: atom n1-n2, type, parameters
