@@ -17,12 +17,15 @@ interface:
 variables:
   default:
     global:
-      numberOfNanopores: 3
       externalTemperature_K: 298
       gasComposition: '{\"CO2\":1.0}'
       raspa_memory: '2Gi'
       use_grid: 1
       atomic_charges_method: 'eqeq'
+      numberOfNanopores: 1
+  openshift:
+    global:
+      numberOfNanopores: 3
 
 blueprint:
   openshift:
@@ -31,7 +34,7 @@ blueprint:
         config:
           walltime: 14400.0
           backend: kubernetes
-  docker:
+  default:
     global:
       resourceManager:
         config:
@@ -247,6 +250,7 @@ output:
 
 platforms:
   - openshift
-  - docker
+  - docker # inherits everything from "default" platform
+  - default
 
 version: 1.0.0
