@@ -18,7 +18,7 @@ Automated virtual experiment that simulates adsorption isotherms on nanoporous m
 
 If you have a container runtime such as docker, podman, rancher desktop, etc available on your system you can execute the experiment by:
 
-1. creating a python virtual environment, activating it, and installing the python module `st4sd-runtime-core[develop]`
+1. creating a python virtual environment, activating it, and installing the python module `st4sd-runtime-core[develop]>=2.2.0`
 2. cloning this repository
 3. launching the experiment
 For example:
@@ -30,8 +30,11 @@ git clone https://github.com/st4sd/nanopore-adsorption-experiment.git
 : # Setup ST4SD runtime-core
 python3 -m venv --copies venv
 . venv/bin/activate
-python3 -m pip install "st4sd-runtime-core[develop]"
-: # Run experiment
+python3 -m pip install "st4sd-runtime-core[develop]>=2.2.0"
+: # Go inside the directory of this repository. 
+: # The next command executes the experiment in there
+cd nanopore-geometry-experiment
+: # Run the experiment
 elaunch.py -i docker-example/cif_files.dat \
       --applicationDependencySource="nanopore-database=cif:copy" \
       nanopore-adsorption-experiment.package
