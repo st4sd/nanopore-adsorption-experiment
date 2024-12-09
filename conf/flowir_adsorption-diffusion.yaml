@@ -95,10 +95,10 @@ components:
       - stage0.GetNanoporeSource:output
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
         cpuUnitsPerCore: 0.25
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
@@ -117,10 +117,10 @@ components:
       - stage0.PrimitiveUnitCell/cif.tgz:copy
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
         cpuUnitsPerCore: 0.5
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 1Gi
     workflowAttributes:
@@ -139,10 +139,10 @@ components:
       - stage0.ChargeAssignment/charged_cif.tgz:copy
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
         cpuUnitsPerCore: 1
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
     resourceRequest:
       memory: '%(raspa_memory)s'
     workflowAttributes:
@@ -162,10 +162,10 @@ components:
       - stage1.MakeGrid/grids.tgz:copy
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
         cpuUnitsPerCore: 1
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
     resourceRequest:
       memory: '%(raspa_memory)s'
     workflowAttributes:
@@ -184,10 +184,10 @@ components:
       - stage2.MonteCarlo/output_data.tgz:copy
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
         cpuUnitsPerCore: 0.25
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
@@ -206,9 +206,9 @@ components:
     resourceManager:
       kubernetes:
         cpuUnitsPerCore: 0.5
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 1Gi
     workflowAttributes:
@@ -229,9 +229,9 @@ components:
     resourceManager:
       kubernetes:
         cpuUnitsPerCore: 0.25
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
@@ -251,10 +251,10 @@ components:
       - stage1.MakeGrid/grids.tgz:copy
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
         cpuUnitsPerCore: 1
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-source-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-source-mdlab:latest
     resourceRequest:
       memory: '%(raspa_memory)s'
     workflowAttributes:
@@ -279,10 +279,10 @@ components:
       - stage2.MolecularDynamics/mean_squared_displacement.tgz:copy
     resourceManager:
       kubernetes:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
         cpuUnitsPerCore: 0.25
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
@@ -303,9 +303,9 @@ components:
     resourceManager:
       kubernetes:
         cpuUnitsPerCore: 0.25
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest  
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
@@ -325,9 +325,9 @@ components:
     resourceManager:
       kubernetes:
         cpuUnitsPerCore: 0.25
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
@@ -348,9 +348,9 @@ components:
     resourceManager:
       kubernetes:
         cpuUnitsPerCore: 0.25
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
       docker:
-        image: docker-na-public.artifactory.swg-devops.com/res-st4sd-community-team-applications-docker-virtual/raspa-pypi-mdlab:latest
+        image: quay.io/st4sd/community-applications/raspa-pypi-mdlab:latest
     resourceRequest:
       memory: 512Mi
     workflowAttributes:
