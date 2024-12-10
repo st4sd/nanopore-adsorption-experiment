@@ -33,7 +33,7 @@ python3 -m venv --copies venv
 python3 -m pip install "st4sd-runtime-core[develop]>=2.2.0"
 : # Go inside the directory of this repository. 
 : # The next command executes the experiment in there
-cd nanopore-geometry-experiment
+cd nanopore-adsorption-experiment
 : # Run the experiment
 elaunch.py --applicationDependencySource="nanopore-database=cif:copy" \
       --manifest=manifest.yaml \
