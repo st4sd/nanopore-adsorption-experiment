@@ -18,7 +18,7 @@ variables:
   default:
     global:
       externalTemperature_K: 298
-      gasComposition: '{\"CO2\":1.0}'
+      gasComposition: '{"CO2":1.0}'
       raspa_memory: '2Gi'
       use_grid: 1
       atomic_charges_method: 'eqeq'
