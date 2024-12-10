@@ -35,9 +35,10 @@ python3 -m pip install "st4sd-runtime-core[develop]>=2.2.0"
 : # The next command executes the experiment in there
 cd nanopore-geometry-experiment
 : # Run the experiment
-elaunch.py -i docker-example/cif_files.dat \
-      --applicationDependencySource="nanopore-database=cif:copy" \
-      nanopore-adsorption-experiment.package
+elaunch.py --applicationDependencySource="nanopore-database=cif:copy" \
+      --manifest=manifest.yaml \
+      --input=docker_example/cif_files.dat \
+      workflow_definitions/adsorption.yaml
 ```
 
 **Note**: Make sure you run the `git clone` command in a directory that your container runtime (e.g.`docker`, `podman`, etc) can mount later when you execute the experiment.
