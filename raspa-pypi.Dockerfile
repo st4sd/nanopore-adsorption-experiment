@@ -22,4 +22,4 @@ RUN pipenv install --dev --skip-lock --system --verbose && \
 COPY forcefield ${FORCEFIELD_DIR}
 
 # Copy Python scripts
-COPY bin        /raspa/bin
+COPY reference-scripts        /raspa/bin
