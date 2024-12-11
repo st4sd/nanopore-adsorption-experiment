@@ -33,7 +33,7 @@ before_script:
 
 script:
   # Run Python linter
-  - flake8 --max-line-length=100 bin/
+  - flake8 --max-line-length=100 reference-scripts/
 
   # Connect to quay.io
   - docker login -u "$QUAY_USERNAME" -p "$QUAY_API_KEY" quay.io
