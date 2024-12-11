@@ -1,5 +1,5 @@
-# © Copyright IBM Corp. 2022 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2022 All Rights Reserved
 
 import json
 import tarfile
@@ -8,12 +8,11 @@ import typing
 import pandas
 
 
-def get_input_ids(input_id_file: str, variables: typing.Dict[str, str]) -> typing.List[str]:
+def get_input_ids(input_id_file: str) -> typing.List[str]:
     """Extracts input ids from input_id_file
        Args:
           input_id_file: A path to the file containing the input ids.
             The value of the field interface.inputSpec.source.file
-          variables: The global variables of the virtual experiment instance.
        Returns:
           Returns a list of the ids of the inputs in the naming specification defined by interface
     """
@@ -45,7 +44,7 @@ def get_properties(property_name: str, property_output_file: str, input_id_file:
     result = pandas.DataFrame()
     for material in materials.splitlines():
         material_name = material.split("/")[1]
-        with open(f'{material_name}-isotherm.json', 'r') as j:
+        with open(f'{material_name}-{property_name}.json', 'r') as j:
             contents = json.loads(j.read())
         concat_result = pandas.DataFrame([[material, contents]],
                                          columns=['input-id', property_name])

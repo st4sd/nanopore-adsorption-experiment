@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM registry.access.redhat.com/ubi9/ubi:9.0.0
 
 # Define default parameters
@@ -11,7 +12,7 @@ ENV CFLAGS="-Ofast -march=x86-64 -mtune=generic"
 RUN dnf -y install --disableplugin=subscription-manager automake diffutils flexiblas-netlib fftw-devel file gcc-c++ libtool make python3-pip python3-devel which && \
     alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     dnf --disableplugin=subscription-manager clean all && \
-    pip install --no-cache-dir pipenv==2022.9.24 && \
+    pip install --no-cache-dir pipenv==2022.10.25 && \
     rm -rf /var/cache/dnf/*
 
 # Download and compile RASPA source code
@@ -42,4 +43,4 @@ RUN pipenv install --skip-lock --system --verbose && \
 COPY forcefield ${FORCEFIELD_DIR}
 
 # Copy Python scripts
-COPY bin        /raspa/bin
+COPY reference-scripts        /raspa/bin

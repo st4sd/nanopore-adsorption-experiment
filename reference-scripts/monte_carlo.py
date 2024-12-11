@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python -B
 
-# © Copyright IBM Corp. 2020 All Rights Reserved
 # SPDX-License-Identifier: Apache2.0
+# © Copyright IBM Corp. 2020 All Rights Reserved
 
 import argparse
 import json
@@ -12,7 +12,7 @@ from modules.calculate_properties import calculate_grid, calculate_UnitCells
 from modules.copy_files import copy_def_files
 
 # Required parameters
-parser = argparse.ArgumentParser(description='Run RASPA simulation.')
+parser = argparse.ArgumentParser(description='Run RASPA GCMC simulation.')
 parser.add_argument('output_folder',
                     type=str,
                     action='store',
@@ -26,20 +26,20 @@ parser.add_argument('--FrameworkName',
                     help='Name of the CIF file describing the nanoporous material structure.')
 
 # Optional parameters
-parser.add_argument('--NumberOfCycles',
-                    type=int,
-                    default=10000,
-                    action='store',
-                    required=False,
-                    metavar='NUMBER_OF_CYCLES',
-                    help='Total number of Monte Carlo cycles to be executed in the simulation.')
 parser.add_argument('--NumberOfInitializationCycles',
                     type=int,
                     default=0,
                     action='store',
                     required=False,
                     metavar='NUMBER_OF_INITIALIZATION_CYCLES',
-                    help='Number of Monte Carlo cycles the be executed during initialization.')
+                    help='Number of Monte Carlo initialization cycles.')
+parser.add_argument('--NumberOfCycles',
+                    type=int,
+                    default=10000,
+                    action='store',
+                    required=False,
+                    metavar='NUMBER_OF_CYCLES',
+                    help='Total number of Monte Carlo simulation cycles.')
 parser.add_argument('--PrintEvery',
                     type=int,
                     default=1,
@@ -96,6 +96,10 @@ parser.add_argument('--EwaldPrecision',
                     required=False,
                     metavar='EWALD_PRECISION',
                     help='Ewald sum precision used to calculate the amount of wave vectors.')
+parser.add_argument('--IgnoreChargesFromCIFFile',
+                    required=False,
+                    action='store_true',
+                    help='Whether to consider the partial atomic charges already in the CIF file.')
 parser.add_argument('--HeliumVoidFraction',
                     type=float,
                     default=0.0,
@@ -177,6 +181,9 @@ arg.GridTypes, arg.NumberOfGrids = calculate_grid(arg.FlueGasComposition)
 # Determine whether movies snapshots should be saved
 arg.Movies = 'yes' if arg.WriteMoviesEvery else 'no'
 
+# Determine whether existing partial atomic charges are considered or not
+arg.UseChargesFromCIFFile = 'no' if arg.IgnoreChargesFromCIFFile else 'yes'
+
 # Create file header as string
 inputfile = dedent("""\
 SimulationType                      MonteCarlo
@@ -202,7 +209,7 @@ FrameworkName                       {FrameworkName}                         # st
 HeliumVoidFraction                  {HeliumVoidFraction}                    # float
 ExternalTemperature                 {ExternalTemperature}                   # float
 ExternalPressure                    {ExternalPressure}                      # float
-UseChargesFromCIFFile               yes                                     # yes / no
+UseChargesFromCIFFile               {UseChargesFromCIFFile}                 # yes / no
 UnitCells                           {UnitCells}                             # int int int
 
 NumberOfGrids                       {NumberOfGrids}                         # int

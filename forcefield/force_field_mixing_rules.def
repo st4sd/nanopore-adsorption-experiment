@@ -3,7 +3,7 @@ shifted
 # general rule for tail corrections
 no
 # number of defined interactions
-148
+154
 # type,     interaction,    epsilon,    sigma
 B_          lennard-jones   47.804      3.582
 C_          lennard-jones   47.854      3.474
@@ -119,12 +119,18 @@ CH_sp2gss   lennard-jones   51.0        4.0
 CH2_sp2gss  lennard-jones   93.0        3.72
 CH2_sp2bae  lennard-jones   83.0        3.72
 CH2_sp2fco  lennard-jones   93.0        3.685
+C_c2h2      lennard-jones   57.875      3.8
+H_c2h2      none
+C_cf4       lennard-jones   48.8126     3.50
+F_cf4       lennard-jones   26.6708     2.95
 dummy_bae   none
 dummy_fco   none
 com_gss     none
 H_com       lennard-jones   36.700      2.958
 C_co2       lennard-jones   27.000      2.800
 O_co2       lennard-jones   79.000      3.050
+S_so2       lennard-jones   73.8        3.39
+O_so2       lennard-jones   79.0        3.05
 N_n2        lennard-jones   36.000      3.310
 N_com       none
 N_nh3       lennard-jones   185.0       3.42
@@ -144,7 +150,7 @@ H_dmf       lennard-jones   8.000       2.200
 C_aro       lennard-jones   35.24       3.55
 H_aro       lennard-jones   15.08       2.42
 CH3_aro     lennard-jones   85.47       3.80
-Ar          lennard-jones   119.800     3.340
+Ar          lennard-jones   116.79      3.3952
 Kr          lennard-jones   166.400     3.636
 Xe          lennard-jones   221.000     4.100
 He          lennard-jones   10.9        2.64
